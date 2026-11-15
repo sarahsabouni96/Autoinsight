@@ -1,37 +1,37 @@
 # AutoInsight | Used-Car Price Estimator
 
-AutoInsight estimates a car’s recorded price from six inputs: manufacturer, model, fuel type, engine size, year of manufacture, and mileage. Enter a car in the Dash dashboard to see its estimate, a 90% prediction interval, and a history of previous estimates.
-
-## Ask about the model
-
-After estimating a price, you can ask the built-in analyst how the model performed. Type a question in your own words under **Ask about the model** and select **Ask analyst**. Answers come from the saved training and evaluation report. The analyst currently covers five topics:
-
-- **Training data:** “How was the dataset split?”
-- **Accuracy:** “How accurate is the model?”
-- **Feature importance:** “Which features matter most?”
-- **Prediction intervals:** “How reliable is the prediction interval?”
-- **Vehicle segments:** “Which groups of cars are in the data?”
-
-For example, asking about interval reliability tells you how often the interval contained the recorded price on held-out cars. In this run, the 90% interval covered about 90.9% of test cars.
+AutoInsight is an end-to-end machine learning application for estimating used-car prices. Enter a manufacturer, model, fuel type, engine size, year of manufacture, and mileage in the Dash dashboard to see an estimated price and a 90% prediction interval. Each estimate is saved in the prediction history.
 
 ## How the project evolved
 
-I started this project with a question: how well could linear regression estimate a used car’s price from its specifications and mileage? In my original Python script, I explored the data, built a preprocessing workflow, and compared two implementations of linear regression: one written in PyTorch and one using scikit-learn. I evaluated their predictions using MAE, RMSE, and R².
+I built AutoInsight by extending my original used-car price prediction project. In the first version, I explored the data and compared two implementations of linear regression, one in PyTorch and one in scikit-learn. I evaluated their predictions using mean absolute error (MAE), root mean squared error (RMSE), and R².
 
-I then extended that experiment into an application. The main change was saving the preprocessing steps and the estimator together. When someone enters a car in the dashboard, the API applies the same transformations learned during training. The current version also compares model families, reports uncertainty, and saves each estimate so it can be revisited.
+In this version, I trained and saved a scikit-learn pipeline that combines preprocessing with the selected estimator. FastAPI uses that same pipeline for new requests, and Dash displays the results. This let me take a car from raw input to a saved prediction without duplicating the training transformations in the application.
+
+## Ask about the model
+
+In the dashboard, type a question under **Ask about the model** and select **Ask analyst**. The analyst matches your question to one of five topics and answers using statistics saved with the fitted model.
+
+| Topic | Example question |
+|---|---|
+| Training data | How was the dataset split? |
+| Accuracy | How accurate is the model? |
+| Feature importance | Which features matter most? |
+| Prediction intervals | How reliable is the prediction interval? |
+| Vehicle segments | Which groups of cars are in the data? |
 
 ## Data and evaluation
 
-The source contains **50,000 mock second-hand car records**. The target is the recorded `Price`. The CSV gives no currency, mileage unit, or listing date, so estimates are displayed in dataset price units. Performance on current market listings would require a separate evaluation. [Kaggle dataset by Mohsen Behdani](https://www.kaggle.com/datasets/msnbehdani/mock-dataset-of-second-hand-car-sales)
+The dataset contains **50,000 second-hand car records**. The target is the recorded `Price`. The CSV gives no currency, mileage unit, or listing date, so estimates are displayed in dataset price units. Performance on current market listings would require a separate evaluation. [Kaggle dataset by Mohsen Behdani](https://www.kaggle.com/datasets/msnbehdani/mock-dataset-of-second-hand-car-sales)
 
-After removing 12 exact duplicates, I reserved 9,998 records for final testing. Of the remaining records, 31,992 were used for fitting and model selection and 7,998 for calibrating prediction intervals. Preprocessing was fitted inside each cross-validation fold. The analyst and dashboard expose the results of this workflow.
+After removing 12 exact duplicates, I reserved 9,998 records for final testing. Of the remaining records, 31,992 were used for fitting and model selection and 7,998 for calibrating prediction intervals. Preprocessing was fitted inside each cross-validation fold. Model selection used mean absolute error, measured in the same units as the recorded price.
 
 | Model | Mean validation MAE across three folds |
 |---|---:|
 | Ridge regression, best setting | 4,862.69 |
 | Histogram gradient boosting, best setting | 385.54 |
 
-Histogram gradient boosting achieved **MAE 359.16**, **RMSE 619.60**, and **R² 0.9986** on the held-out test set. Always predicting the training median gave a test MAE of 10,461.05. The nominal 90% prediction interval contained the recorded price for **90.86%** of test cars.
+Histogram gradient boosting achieved **MAE 359.16**, **RMSE 619.60**, and **R² 0.9986** on the held-out test set. Always predicting the training median gave a test MAE of 10,461.05. The 90% prediction intervals covered **90.86%** of recorded test prices.
 
 ## Run the project
 
