@@ -1,0 +1,5 @@
+*
+!requirements.txt
+!autoinsight/
+!autoinsight/**
+**/__pycache__
